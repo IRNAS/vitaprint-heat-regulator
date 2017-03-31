@@ -37,6 +37,10 @@ uint8_t uiKeyCode = KEY_NONE;
 long AIN0 = 0;
 long AIN1 = 0;
 long AIN2 = 0;
+long A0INV = 0;
+long A1INV = 0;
+long A2INV = 0;
+
 
 double TH1 = 20;
 double TH2 = 20;
@@ -46,9 +50,9 @@ double CH2 = 0;
 double CB = 0;
 
 // Heaters
-double DH1 = 8;
-double DH2 = 9;
-double DB = 10;
+int DH1pin = 8;
+int DH2pin = 9;
+int DBpin = 10;
 
 //timers
 unsigned long Current_time = 0;
@@ -56,19 +60,23 @@ unsigned long Prev_time = 0;
 
 //State variables
 bool ST = LOW;
+int PST = 0;
 
 //PID variables
 #include <PID_v1.h>
 // HEAD 1
 double H1p=2, H1i=5, H1d=1;
+double DH1 = 0;
 PID H1PID(&CH1, &DH1, &TH1, H1p, H1i, H1d, DIRECT);
 
 // HEAD 2
 double H2p=2, H2i=5, H2d=1;
+double DH2 = 0;
 PID H2PID(&CH2, &DH2, &TH2, H2p, H2i, H2d, DIRECT);
 
 //  BED
 double Bp=2, Bi=5, Bd=1;
+double DB = 0;
 PID BPID(&CB, &DB, &TB, Bp, Bi, Bd, DIRECT);
 
 
@@ -233,15 +241,22 @@ void setup() {
 
 void loop() {  
   
-  AIN0 = analogRead(A13);
-  AIN1 = analogRead(A14);
-  AIN2 = analogRead(A15);
+  
+  A0INV =  analogRead(A13);
+  AIN0 = map(A0INV,0,1024,1024,0);
+  A1INV =  analogRead(A14);
+  AIN1 = map(A1INV,0,1024,1024,0);
+  A2INV =  analogRead(A15);
+  AIN2 = map(A2INV,0,1024,1024,0);
   CH1 = Thermister(AIN0);
   CH2 = Thermister(AIN1);
   CB = Thermister(AIN2);
   H1PID.Compute();
   H2PID.Compute();
   BPID.Compute();
+  analogWrite(DH1pin, DH1);
+  analogWrite(DH2pin, DH2);
+  analogWrite(DBpin, DB);
   
   uiStep();                                     // check for key press
   if (uiKeyCode == KEY_SELECT){
@@ -261,7 +276,43 @@ void loop() {
     Prev_time = Current_time;
   }
 
-    updateMenu();                               // update menu bar
+    updateMenu();                               // update menu bar,
+     if (Serial.available() > 0) {
+                // read the incoming byte:
+                PST = Serial.read();
+                if(PST == 49){
+                // say what you got:
+                Serial.print("Head 1");
+                Serial.print("/");
+                Serial.print(AIN0);
+                Serial.print("/");
+                Serial.print(CH1,1);
+                Serial.print("/");
+                Serial.println(DH1,0);
+                PST = 0;
+                }else if(PST == 50){
+                // say what you got:
+                Serial.print("Head 2");
+                Serial.print("/");
+                Serial.print(AIN1);
+                Serial.print("/");
+                Serial.print(CH2,1);
+                Serial.print("/");
+                Serial.println(DH2,0);
+                PST = 0;
+                }else if(PST == 51){
+                // say what you got:
+                Serial.print("Bed  1");
+                Serial.print("/");
+                Serial.print(AIN2);
+                Serial.print("/");
+                Serial.print(CB,1);
+                Serial.print("/");
+                Serial.println(DB,0);
+                PST = 0;
+                }
+                
+        }
   
 }
 

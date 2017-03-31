@@ -37,6 +37,10 @@ uint8_t uiKeyCode = KEY_NONE;
 long AIN0 = 0;
 long AIN1 = 0;
 long AIN2 = 0;
+long A0INV = 0;
+long A1INV = 0;
+long A2INV = 0;
+
 
 double TH1 = 20;
 double TH2 = 20;
@@ -233,9 +237,13 @@ void setup() {
 
 void loop() {  
   
-  AIN0 = analogRead(A13);
-  AIN1 = analogRead(A14);
-  AIN2 = analogRead(A15);
+  
+  A0INV =  analogRead(A13);
+  AIN0 = map(A0INV,0,1024,1024,0);
+  A1INV =  analogRead(A14);
+  AIN1 = map(A1INV,0,1024,1024,0);
+  A2INV =  analogRead(A15);
+  AIN2 = map(A2INV,0,1024,1024,0);
   CH1 = Thermister(AIN0);
   CH2 = Thermister(AIN1);
   CB = Thermister(AIN2);
